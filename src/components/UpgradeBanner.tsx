@@ -14,7 +14,7 @@ export default function UpgradeBanner({ onUpgrade }: UpgradeBannerProps) {
         </div>
         <div className="ml-3">
           <p className="text-sm text-yellow-700">
-            You've reached the limit of 3 notes on the Free plan.
+            You&apos;ve reached the limit of 3 notes on the Free plan.
           </p>
           <div className="mt-2">
             <button

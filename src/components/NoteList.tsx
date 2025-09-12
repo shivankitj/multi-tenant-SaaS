@@ -18,7 +18,7 @@ export default function NoteList({ notes, onDeleteNote }: NoteListProps) {
   if (notes.length === 0) {
     return (
       <div className="text-center py-12">
-        <p className="text-gray-500">You don't have any notes yet.</p>
+        <p className="text-gray-500">You don&apos;t have any notes yet.</p>
         <p className="text-sm text-gray-400 mt-1">Create your first note using the form on the right.</p>
       </div>
     );
