@@ -2,10 +2,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import { withAdminAuth } from '@/lib/api-utils';
-
+import { AuthUser } from '@/lib/auth';
 const prisma = new PrismaClient();
 
-export const POST = withAdminAuth(async (request: NextRequest, user: any) => {
+export const POST = withAdminAuth(async (request: NextRequest, user: AuthUser) => {
   try {
     // URL: /api/tenants/acme/upgrade
     const url = new URL(request.url);

@@ -1,7 +1,7 @@
 // src/app/notes/page.tsx
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import NoteList from '../../components/NoteList';
@@ -25,35 +25,21 @@ export default function NotesPage() {
   const [isLoadingNotes, setIsLoadingNotes] = useState(true);
   const [showUpgradeBanner, setShowUpgradeBanner] = useState(false);
 
+  // Redirect to home page if user is not authenticated
   useEffect(() => {
     if (!isLoading && !user) {
       router.push('/');
     }
   }, [user, isLoading, router]);
 
-  useEffect(() => {
-    if (user && token) {
-      fetchNotes();
-    }
-  }, [user, token]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return null;
-  }
-
-  const fetchNotes = async () => {
+  /**
+   * Fetch Notes Function - wrapped in useCallback
+   */
+  const fetchNotes = useCallback(async () => {
     try {
       const response = await fetch('/api/notes', {
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -68,15 +54,39 @@ export default function NotesPage() {
     } finally {
       setIsLoadingNotes(false);
     }
-  };
+  }, [token]);
 
+  /**
+   * Fetch notes when user and token are ready
+   */
+  useEffect(() => {
+    if (user && token) {
+      fetchNotes();
+    }
+  }, [user, token, fetchNotes]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
+
+  /**
+   * Create a new note
+   */
   const handleCreateNote = async (title: string, content: string) => {
     try {
       const response = await fetch('/api/notes', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ title, content }),
       });
@@ -88,11 +98,11 @@ export default function NotesPage() {
         return true;
       } else {
         const errorData = await response.json();
-        
+
         if (errorData.limitReached) {
           setShowUpgradeBanner(true);
         }
-        
+
         console.error('Failed to create note:', errorData.error);
         return false;
       }
@@ -102,17 +112,20 @@ export default function NotesPage() {
     }
   };
 
+  /**
+   * Delete a note
+   */
   const handleDeleteNote = async (id: string) => {
     try {
       const response = await fetch(`/api/notes/${id}`, {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
       if (response.ok) {
-        setNotes(notes.filter(note => note.id !== id));
+        setNotes(notes.filter((note) => note.id !== id));
       } else {
         console.error('Failed to delete note');
       }
@@ -121,12 +134,15 @@ export default function NotesPage() {
     }
   };
 
+  /**
+   * Upgrade to Pro subscription
+   */
   const handleUpgrade = async () => {
     try {
       const response = await fetch(`/api/tenants/${user.tenantId}/upgrade`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${token}`,
+          Authorization: `Bearer ${token}`,
         },
       });
 
@@ -143,6 +159,7 @@ export default function NotesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Header Section */}
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div>
@@ -161,29 +178,30 @@ export default function NotesPage() {
         </div>
       </header>
 
+      {/* Main Section */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Upgrade Banner */}
         {showUpgradeBanner && user.role === 'Admin' && (
           <UpgradeBanner onUpgrade={handleUpgrade} />
         )}
-        
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Notes List */}
           <div className="lg:col-span-2">
             <div className="bg-white shadow rounded-lg p-6">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Your Notes</h2>
-              
+
               {isLoadingNotes ? (
                 <div className="flex justify-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                 </div>
               ) : (
-                <NoteList 
-                  notes={notes} 
-                  onDeleteNote={handleDeleteNote} 
-                />
+                <NoteList notes={notes} onDeleteNote={handleDeleteNote} />
               )}
             </div>
           </div>
-          
+
+          {/* Create Note Form */}
           <div>
             <div className="bg-white shadow rounded-lg p-6 sticky top-6">
               <h2 className="text-lg font-medium text-gray-900 mb-4">Create New Note</h2>
